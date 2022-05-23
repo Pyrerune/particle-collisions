@@ -2,10 +2,11 @@
 name = "CalcProject"
 version = "0.1.0"
 edition = "2021"
-
+default-run = "CalcProject"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 nannou = "0.18.1"
 nannou_conrod = "0.18.0"
 itertools = "0.10.3"
+
