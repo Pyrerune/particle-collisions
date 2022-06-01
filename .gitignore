@@ -1,2 +1,7 @@
 /target
 Cargo.lock
+/.idea
+/__pycache__
+stable.rs
+/media
+/.vscode

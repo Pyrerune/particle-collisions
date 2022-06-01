@@ -15,15 +15,6 @@ impl VecReplace for Vec<Particle> {
     }
 }
 impl Particle {
-    fn overlaps(&self, other: &Particle) -> bool {
-        let self_x = self.position.x;
-        let other_x = other.position.x;
-        let self_left = self_x - self.scale;
-        let other_left = other_x - other.scale;
-        let self_right = self_x + self.scale;
-        let other_right = other_x + other.scale;
-        (self_left > other_left && self_left < other_right) || (self_right < other_right && self_right > other_left)
-    }
     fn detect_global(&mut self, global: &Rect) {
         let cbox = self.position;
         if cbox.x - self.scale < global.left() || cbox.x + self.scale > global.right() {
@@ -84,12 +75,11 @@ impl Model {
 impl Sim {
     fn create_particles(&mut self, global: Rect) {
         let mut rand = nannou::rand::thread_rng();
-        let mut available_ids = (0..self.num_particle).collect::<Vec<_>>();
-        for _i in 0..self.num_particle {
+        for i in 0..self.num_particle {
             let mass = rand.gen_range(0.5..1.0);
             let scale = mass * 15.0;
             let position = pt2(rand.gen_range(global.left()..global.right()), rand.gen_range(global.bottom()..global.top()));
-            let id = available_ids.remove(rand.gen_range(0..available_ids.len()));
+            let id = i;
             let collision_box = Rect::from_xy_wh(position, pt2(scale * 2.0 + 2.0, scale * 2.0 + 2.0));
             let color = rgb(rand.gen_range(0.1..1.0), rand.gen_range(0.1..1.0), rand.gen_range(0.1..1.0));
             let particle = Particle {
@@ -132,6 +122,7 @@ widget_ids! {
         particles,
         resistance,
         stop,
+        exit,
 
     }
 }
@@ -151,15 +142,15 @@ fn view(app: &App, model: &Model, frame: Frame) {
 
 fn model(app: &App) -> Model {
     app.set_loop_mode(LoopMode::RefreshSync);
+    app.set_exit_on_escape(true);
     let wid = app
         .new_window()
-        .size(500, 500)
+        .fullscreen()
         .title("Particle Collisions")
         .raw_event(raw_window_event)
         .view(view)
         .build()
         .unwrap();
-
     let mut ui = ui::builder(app).window(wid).build().unwrap();
     let ids = Ids::new(ui.widget_id_generator());
 
@@ -168,7 +159,7 @@ fn model(app: &App) -> Model {
             
             particles: vec![],
             acceleration: 0.0,
-            num_particle: 2,
+            num_particle: 20,
             resistance: 0.0,
         },
         ui,
@@ -215,6 +206,7 @@ fn update(app: &App, model: &mut Model, update: Update) {
             }
             model.stop = !model.stop;
         }
+        
         for value in slider(sim.acceleration, 0.0, 500.0)
             .down(10.0)
             .label("Accel")
@@ -222,19 +214,14 @@ fn update(app: &App, model: &mut Model, update: Update) {
         {
             sim.acceleration = value.round();
         }
-        for value in slider(sim.num_particle as f32, 2.0, 512.0)
-            .down(10.0)
-            .label("Particles")
-            .set(model.ids.particles, ui)
-        {
-            sim.num_particle = value.trunc() as usize;
-        }
+        
         for value in slider(sim.resistance, 0.0, 1000.0)
             .down(10.0)
             .label("Resistance")
-            .set(model.ids.resistance, ui) {
-                sim.resistance = value;
-            }
+            .set(model.ids.resistance, ui) 
+        {
+            sim.resistance = value;
+        }
     }
     let global = app.window_rect();
     let delta = update.since_last.as_secs_f32();
@@ -246,39 +233,6 @@ fn update(app: &App, model: &mut Model, update: Update) {
     }
     sim.update_particles(delta, &global)
     
-}
-fn collide_a(particle: &mut Particle, active: &mut Vec<(Particle, usize)>) {
-    for (other, _) in active {
-        if other.id != particle.id {
-            if particle.position.distance(other.position) < particle.scale + other.scale {
-                let normal = pt2(other.position.x - particle.position.x, other.position.y - particle.position.y);
-                
-                let unit_normal = normal / (normal.x.powf(2.0) + normal.y.powf(2.0)).sqrt();
-                let unit_tangent = pt2(-unit_normal.y, unit_normal.x);
-                
-                let s_self_n = particle.velocity.dot(unit_normal);
-                let s_self_t = particle.velocity.dot(unit_tangent);
-
-                let s_other_n = other.velocity.dot(unit_normal);
-                let s_other_t = other.velocity.dot(unit_tangent);
-
-                let denominator = particle.mass + other.mass;
-
-                let s_prime_self_n = ((s_self_n * (particle.mass - other.mass)) + (2.0 * other.mass * s_other_n)) / denominator;
-                let s_prime_other_n = ((s_other_n * (other.mass - particle.mass)) + (2.0 * particle.mass * s_self_n)) / denominator;
-
-                let v_self_n = s_prime_self_n * unit_normal;
-                let v_self_t = s_self_t * unit_tangent;
-
-                let v_other_n = s_prime_other_n * unit_normal;
-                let v_other_t = s_other_t * unit_tangent;
-            
-                particle.velocity = v_self_n + v_self_t;
-                other.velocity = v_other_n + v_other_t;
-            }
-        }
-    }
-
 }
 fn collide(particle: &mut Particle, vec: &mut Vec<Particle>) {
     for other in vec {

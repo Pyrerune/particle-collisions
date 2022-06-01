@@ -1,0 +1,82 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'CalcProject'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=CalcProject",
+                    "--package=CalcProject"
+                ],
+                "filter": {
+                    "name": "CalcProject",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'CalcProject'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=CalcProject",
+                    "--package=CalcProject"
+                ],
+                "filter": {
+                    "name": "CalcProject",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'stable'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=stable",
+                    "--package=CalcProject"
+                ],
+                "filter": {
+                    "name": "stable",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'stable'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=stable",
+                    "--package=CalcProject"
+                ],
+                "filter": {
+                    "name": "stable",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
